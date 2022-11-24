@@ -9,59 +9,64 @@
 
 fastify.register(require('./firebase'));
 
-fastify.get('/todo', async (req, res) => {
-  const todos = await fastify.firebase
+fastify.get('/', async (req, res) => {
+  const foods = await fastify.firebase
     .firestore()
-    .collection('todos')
+    .collection('foods')
     .get();
 
-  return todos.docs.map(doc => doc.data());
+  return foods.docs.map(doc => doc.data());
 });
 
-fastify.get('/todo/:id', async (req, res) => {
-  const todo = await fastify.firebase
+fastify.get('/:id', async (req, res) => {
+  const food = await fastify.firebase
     .firestore()
-    .collection('todos')
+    .collection('foods')
     .doc(req.params.id)
     .get();
 
-  if (!todo) {
+  if (!food) {
     return res.code(404).send();
   }
 
-  return todo.data();
+  return food.data();
 });
 
-fastify.post('/todo/create', async (req, res) => {
-  const todoId = await fastify.firebase
+fastify.post('/create', async (req, res) => {
+  const foodId = await fastify.firebase
     .firestore()
-    .collection('todos')
+    .collection('foods')
     .doc().id;
-  const todo = await fastify.firebase
+  const food = await fastify.firebase
     .firestore()
-    .collection('todos')
-    .doc(todoId)
+    .collection('foods')
+    .doc(foodId)
     .set({
-      ...req.body, id: todoId
+      id: foodId,
+      ...req.body,
+      created_at: new Date(),
     });
 
-  return todo.id;
+  return food.id;
 });
 
-fastify.put('/todo/update/:id', async (req, res) => {
-  const todo = await fastify.firebase
+fastify.put('/edit/:id', async (req, res) => {
+  const food = await fastify.firebase
     .firestore()
-    .collection('todos')
+    .collection('foods')
     .doc(req.params.id)
-    .update(req.body);
+    .update({
+      ...req.body,
+      updated_at: new Date(),
+    });
 
-  return todo.id;
+  return food.id;
 });
 
-fastify.delete('/todo', async (req, res) => {
-  const todo = await fastify.firebase
+fastify.delete('/', async (req, res) => {
+  const food = await fastify.firebase
     .firestore()
-    .collection('todos')
+    .collection('foods')
     .doc(req.body.id)
     .delete();
 
