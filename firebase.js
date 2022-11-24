@@ -4,7 +4,6 @@ const fb = require('firebase-admin');
 
 const credentials = require('./credentials.json');
 
-
 function firebase(fastify, options, next) {
   const appConfig = {
     credential: fb.credential.cert(credentials)

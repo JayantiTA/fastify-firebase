@@ -9,17 +9,60 @@
 
 fastify.register(require('./firebase'));
 
-fastify.get('/todos', (req, reply) => {
-  const todo = fastify.firebase
+fastify.get('/todo', async (req, res) => {
+  const todos = await fastify.firebase
   .firestore()
   .collection('todos')
-  .get()
-  .then((querySnapshot) => {
-    querySnapshot.forEach((doc) => {
-        // doc.data() is never undefined for query doc snapshots
-        console.log(doc.id, " => ", doc.data());
-    });
+  .get();
+
+  return todos.docs.map(doc => doc.data());
+});
+
+fastify.get('/todo/:id', async (req, res) => {
+  const todo = await fastify.firebase
+  .firestore()
+  .collection('todos')
+  .doc(req.params.id)
+  .get();
+
+  if (!todo) {
+    return res.code(404).send();
+  }
+
+  return todo.data();
+});
+
+fastify.post('/todo/create', async (req, res) => {
+  const todoId = await fastify.firebase.firestore().collection('todos').doc().id;
+  const todo = await fastify.firebase
+  .firestore()
+  .collection('todos')
+  .doc(todoId)
+  .set({
+    ...req.body, id: todoId
   });
+
+  return todo.id;
+});
+
+fastify.put('/todo/update/:id', async (req, res) => {
+  const todo = await fastify.firebase
+  .firestore()
+  .collection('todos')
+  .doc(req.params.id)
+  .update(req.body);
+
+  return todo.id;
+});
+
+fastify.delete('/todo', async (req, res) => {
+  const todo = await fastify.firebase
+  .firestore()
+  .collection('todos')
+  .doc(req.body.id)
+  .delete();
+
+  return req.body.id;
 });
 
 fastify.listen({ port: 4000 }, function (err, address) {
