@@ -9,48 +9,68 @@
 
 fastify.register(require('./firebase'));
 
-fastify.get('/', async (req, res) => {
-  const foods = await fastify.firebase
+fastify.get('/', async (req, rep) => {
+  let foods = await fastify.firebase
     .firestore()
     .collection('foods')
     .get();
+  foods = foods.docs.map(doc => doc.data());
 
-  return foods.docs.map(doc => doc.data());
+  return rep.send({
+    foods,
+    message: 'Success',
+    success: true,
+  });
 });
 
-fastify.get('/:id', async (req, res) => {
+fastify.get('/:id', async (req, rep) => {
   const food = await fastify.firebase
     .firestore()
     .collection('foods')
     .doc(req.params.id)
     .get();
 
-  if (!food) {
-    return res.code(404).send();
+  if (!food.exists) {
+    return rep.code(404).send({
+      message: 'Food not found',
+      success: false,
+    });
   }
 
-  return food.data();
+  return rep.send({
+    food: {
+      ...food.data(),
+    },
+    message: 'Success',
+    success: true,
+  });
 });
 
-fastify.post('/create', async (req, res) => {
+fastify.post('/create', async (req, rep) => {
   const foodId = await fastify.firebase
     .firestore()
     .collection('foods')
     .doc().id;
-  const food = await fastify.firebase
+  const food = {
+    id: foodId,
+    ...req.body,
+    created_at: new Date(),
+  };
+
+  await fastify.firebase
     .firestore()
     .collection('foods')
     .doc(foodId)
-    .set({
-      id: foodId,
-      ...req.body,
-      created_at: new Date(),
-    });
+    .set(food);
 
-  return food.id;
+  return rep.send({
+    message: 'Food added successfully',
+    data: food,
+    success: true,
+  });
 });
 
-fastify.put('/edit/:id', async (req, res) => {
+fastify.put('/edit/:id', async (req, rep) => {
   const food = await fastify.firebase
     .firestore()
     .collection('foods')
@@ -59,18 +79,38 @@ fastify.put('/edit/:id', async (req, res) => {
       ...req.body,
       updated_at: new Date(),
     });
+  
+  if (!food.exists) {
+    return rep.code(404).send({
+      message: 'Food not found',
+      success: false,
+    });
+  }
 
-  return food.id;
+  return rep.send({
+    message: 'Food updated successfully',
+    success: true,
+  });
 });
 
-fastify.delete('/', async (req, res) => {
+fastify.delete('/', async (req, rep) => {
   const food = await fastify.firebase
     .firestore()
     .collection('foods')
     .doc(req.body.id)
     .delete();
 
-  return req.body.id;
+  if (!food.exists) {
+    return rep.code(404).send({
+      message: 'Food not found',
+      success: false,
+    });
+  }
+
+  return rep.send({
+    message: 'Food deleted successfully',
+    success: true,
+  });
 });
 
 fastify.listen({ port: 4000 }, function (err, address) {
