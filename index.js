@@ -9,7 +9,7 @@
 
 fastify.register(require('./firebase'));
 
-fastify.get('/', async (req, rep) => {
+fastify.get('/foods', async (req, rep) => {
   let foods = await fastify.firebase
     .firestore()
     .collection('foods')
@@ -23,7 +23,7 @@ fastify.get('/', async (req, rep) => {
   });
 });
 
-fastify.get('/:id', async (req, rep) => {
+fastify.get('/foods/:id', async (req, rep) => {
   const food = await fastify.firebase
     .firestore()
     .collection('foods')
@@ -46,7 +46,7 @@ fastify.get('/:id', async (req, rep) => {
   });
 });
 
-fastify.post('/create', async (req, rep) => {
+fastify.post('/foods', async (req, rep) => {
   const foodId = await fastify.firebase
     .firestore()
     .collection('foods')
@@ -70,13 +70,13 @@ fastify.post('/create', async (req, rep) => {
   });
 });
 
-fastify.put('/edit/:id', async (req, rep) => {
+fastify.put('/foods', async (req, rep) => {
   const food = await fastify.firebase
     .firestore()
     .collection('foods')
-    .doc(req.params.id)
+    .doc(req.body.id)
     .update({
-      ...req.body,
+      ...req.body.data,
       updated_at: new Date(),
     });
   
@@ -93,7 +93,7 @@ fastify.put('/edit/:id', async (req, rep) => {
   });
 });
 
-fastify.delete('/', async (req, rep) => {
+fastify.delete('/foods', async (req, rep) => {
   const food = await fastify.firebase
     .firestore()
     .collection('foods')
