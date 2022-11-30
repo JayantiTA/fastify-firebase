@@ -80,7 +80,7 @@ fastify.put('/foods', async (req, rep) => {
       updated_at: new Date(),
     });
   
-  if (!food.exists) {
+  if (!food) {
     return rep.code(404).send({
       message: 'Food not found',
       success: false,
@@ -100,7 +100,7 @@ fastify.delete('/foods', async (req, rep) => {
     .doc(req.body.id)
     .delete();
 
-  if (!food.exists) {
+  if (!food) {
     return rep.code(404).send({
       message: 'Food not found',
       success: false,
